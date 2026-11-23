@@ -1,0 +1,75 @@
+
+# ==========================================
+# SOFTWARE FJ - GESTION DE CLIENTES
+# Curso: Programacion 213023 - UNAD
+# ==========================================
+
+from entidades import Entidad
+from excepciones import DatosInvalidosError
+
+
+class Cliente(Entidad):
+    """
+    Representa un cliente registrado
+    en el sistema Software FJ.
+    """
+
+    def __init__(self, identificador, nombre, correo, telefono):
+        super().__init__(identificador)
+
+        if not isinstance(nombre, str) or not nombre.strip():
+            raise DatosInvalidosError(
+                "El nombre del cliente es obligatorio."
+            )
+
+        if not isinstance(correo, str) or "@" not in correo:
+            raise DatosInvalidosError(
+                "El correo electronico no es valido."
+            )
+
+        if not isinstance(telefono, str):
+            raise DatosInvalidosError(
+                "El telefono debe ser texto."
+            )
+
+        telefono_limpio = telefono.replace(" ", "")
+
+        if not telefono_limpio.isdigit() or not 7 <= len(telefono_limpio) <= 15:
+            raise DatosInvalidosError(
+                "El telefono debe contener entre 7 y 15 digitos."
+            )
+
+        # Encapsulacion de datos personales
+        self.__nombre = nombre.strip()
+        self.__correo = correo.strip().lower()
+        self.__telefono = telefono_limpio
+
+    @property
+    def nombre(self):
+        return self.__nombre
+
+    @property
+    def correo(self):
+        return self.__correo
+
+    @property
+    def telefono(self):
+        return self.__telefono
+
+    def obtener_resumen(self):
+        return (
+            f"Cliente: {self.__nombre} | "
+            f"Correo: {self.__correo} | "
+            f"Telefono: {self.__telefono}"
+        )
+
+    def actualizar_correo(self, nuevo_correo):
+        if not isinstance(nuevo_correo, str) or "@" not in nuevo_correo:
+            raise DatosInvalidosError(
+                "El nuevo correo no es valido."
+            )
+
+        self.__correo = nuevo_correo.strip().lower()
+
+    def __str__(self):
+        return self.obtener_resumen()
