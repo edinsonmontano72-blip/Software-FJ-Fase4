@@ -1,0 +1,41 @@
+
+# ==========================================
+# SOFTWARE FJ - CLASE ABSTRACTA ENTIDAD
+# Curso: Programación 213023 - UNAD
+# ==========================================
+
+from abc import ABC, abstractmethod
+from datetime import datetime
+
+
+class Entidad(ABC):
+    """
+    Clase abstracta que representa una entidad
+    general del sistema Software FJ.
+    """
+
+    def __init__(self, identificador):
+        if not identificador:
+            raise ValueError("El identificador es obligatorio.")
+
+        self.__identificador = str(identificador)
+        self.__fecha_creacion = datetime.now()
+
+    @property
+    def identificador(self):
+        return self.__identificador
+
+    @property
+    def fecha_creacion(self):
+        return self.__fecha_creacion
+
+    @abstractmethod
+    def obtener_resumen(self):
+        """
+        Método abstracto que deberán implementar
+        las clases que hereden de Entidad.
+        """
+        pass
+
+    def mostrar_identificacion(self):
+        return f"Identificador: {self.__identificador}"
