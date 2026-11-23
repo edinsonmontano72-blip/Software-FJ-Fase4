@@ -1,0 +1,346 @@
+
+# ==========================================
+# SOFTWARE FJ - PROGRAMA PRINCIPAL
+# Curso: Programacion 213023 - UNAD
+# ==========================================
+
+import logging
+
+from clientes import Cliente
+from servicios import (
+    ReservaSala,
+    AlquilerEquipo,
+    AsesoriaEspecializada
+)
+from reservas import Reserva
+from excepciones import (
+    DatosInvalidosError,
+    ClienteNoEncontradoError,
+    ServicioNoDisponibleError
+)
+
+
+# ==========================================
+# CONFIGURACION DEL ARCHIVO DE REGISTRO
+# ==========================================
+
+logging.basicConfig(
+    filename="software_fj.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger("SoftwareFJ")
+
+
+# ==========================================
+# CLASE PRINCIPAL DEL SISTEMA
+# ==========================================
+
+class SistemaSoftwareFJ:
+
+    def __init__(self):
+        # Listas internas de objetos
+        self.clientes = []
+        self.servicios = []
+        self.reservas = []
+
+    def registrar_cliente(self, cliente):
+        if any(c.identificador == cliente.identificador
+               for c in self.clientes):
+            raise DatosInvalidosError(
+                "Ya existe un cliente con ese identificador."
+            )
+
+        self.clientes.append(cliente)
+        logger.info("Cliente registrado: %s", cliente.identificador)
+
+        return "Cliente registrado correctamente."
+
+    def registrar_servicio(self, servicio):
+        if any(s.identificador == servicio.identificador
+               for s in self.servicios):
+            raise DatosInvalidosError(
+                "Ya existe un servicio con ese identificador."
+            )
+
+        self.servicios.append(servicio)
+        logger.info("Servicio registrado: %s", servicio.identificador)
+
+        return "Servicio registrado correctamente."
+
+    def buscar_cliente(self, identificador):
+        for cliente in self.clientes:
+            if cliente.identificador == str(identificador):
+                return cliente
+
+        raise ClienteNoEncontradoError(
+            "No se encontro el cliente solicitado."
+        )
+
+    def buscar_servicio(self, identificador):
+        for servicio in self.servicios:
+            if servicio.identificador == str(identificador):
+                return servicio
+
+        raise ServicioNoDisponibleError(
+            "No se encontro el servicio solicitado."
+        )
+
+    def crear_reserva(self, identificador, id_cliente,
+                      id_servicio, duracion):
+
+        cliente = self.buscar_cliente(id_cliente)
+        servicio = self.buscar_servicio(id_servicio)
+
+        reserva = Reserva(
+            identificador,
+            cliente,
+            servicio,
+            duracion
+        )
+
+        self.reservas.append(reserva)
+
+        logger.info("Reserva creada: %s", identificador)
+
+        return reserva
+
+    def listar_clientes(self):
+        return [cliente.obtener_resumen()
+                for cliente in self.clientes]
+
+    def listar_servicios(self):
+        return [servicio.describir_servicio()
+                for servicio in self.servicios]
+
+    def listar_reservas(self):
+        return [reserva.obtener_resumen()
+                for reserva in self.reservas]
+
+
+# ==========================================
+# FUNCION PARA EJECUTAR Y CONTROLAR ERRORES
+# ==========================================
+
+def ejecutar_operacion(numero, descripcion, funcion):
+
+    print("\n------------------------------------------")
+    print(f"OPERACION {numero}: {descripcion}")
+    print("------------------------------------------")
+
+    try:
+        resultado = funcion()
+
+    except Exception as error:
+        logger.exception(
+            "Error en la operacion %s: %s",
+            numero,
+            descripcion
+        )
+        print("Operacion controlada:", error)
+
+    else:
+        logger.info(
+            "Operacion %s realizada correctamente.",
+            numero
+        )
+        if resultado is not None:
+            print(resultado)
+
+    finally:
+        print("Finalizacion de la operacion", numero)
+
+
+# ==========================================
+# EJECUCION DE LAS PRUEBAS
+# ==========================================
+
+def iniciar_sistema():
+
+    sistema = SistemaSoftwareFJ()
+
+    print("\n==========================================")
+    print("       SISTEMA DE GESTION SOFTWARE FJ")
+    print("==========================================")
+
+    # OPERACION 1: Registrar cliente valido
+    ejecutar_operacion(
+        1,
+        "Registrar cliente valido",
+        lambda: sistema.registrar_cliente(
+            Cliente(
+                "C001",
+                "Carlos Martinez",
+                "carlos@gmail.com",
+                "3001234567"
+            )
+        )
+    )
+
+    # OPERACION 2: Registrar segundo cliente
+    ejecutar_operacion(
+        2,
+        "Registrar segundo cliente",
+        lambda: sistema.registrar_cliente(
+            Cliente(
+                "C002",
+                "Maria Rodriguez",
+                "maria@gmail.com",
+                "3101234567"
+            )
+        )
+    )
+
+    # OPERACION 3: Intentar registrar cliente invalido
+    ejecutar_operacion(
+        3,
+        "Registrar cliente con correo invalido",
+        lambda: sistema.registrar_cliente(
+            Cliente(
+                "C003",
+                "Pedro Lopez",
+                "correo_incorrecto",
+                "3201234567"
+            )
+        )
+    )
+
+    # OPERACION 4: Registrar servicio de sala
+    ejecutar_operacion(
+        4,
+        "Registrar servicio de reserva de sala",
+        lambda: sistema.registrar_servicio(
+            ReservaSala("S001", "Sala de reuniones", 50000, 20)
+        )
+    )
+
+    # OPERACION 5: Registrar alquiler de equipos
+    ejecutar_operacion(
+        5,
+        "Registrar servicio de alquiler de equipos",
+        lambda: sistema.registrar_servicio(
+            AlquilerEquipo(
+                "S002",
+                "Computador portatil",
+                15000,
+                "Portatil"
+            )
+        )
+    )
+
+    # OPERACION 6: Registrar asesoria especializada
+    ejecutar_operacion(
+        6,
+        "Registrar asesoria especializada",
+        lambda: sistema.registrar_servicio(
+            AsesoriaEspecializada(
+                "S003",
+                "Asesoria informatica",
+                80000,
+                "Tecnologia"
+            )
+        )
+    )
+
+    # OPERACION 7: Intentar registrar servicio invalido
+    ejecutar_operacion(
+        7,
+        "Registrar servicio con tarifa incorrecta",
+        lambda: sistema.registrar_servicio(
+            ReservaSala("S004", "Sala invalida", -1000, 10)
+        )
+    )
+
+    # OPERACION 8: Crear una reserva valida
+    ejecutar_operacion(
+        8,
+        "Crear reserva para un cliente registrado",
+        lambda: sistema.crear_reserva(
+            "R001", "C001", "S001", 2
+        )
+    )
+
+    # OPERACION 9: Confirmar la reserva
+    ejecutar_operacion(
+        9,
+        "Confirmar reserva R001",
+        lambda: sistema.reservas[0].confirmar()
+    )
+
+    # OPERACION 10: Procesar la reserva
+    ejecutar_operacion(
+        10,
+        "Procesar reserva y calcular costo",
+        lambda: sistema.reservas[0].procesar(
+            descuento=10,
+            impuesto=19
+        )
+    )
+
+    # OPERACION 11: Crear reserva con cliente inexistente
+    ejecutar_operacion(
+        11,
+        "Crear reserva con cliente no registrado",
+        lambda: sistema.crear_reserva(
+            "R002", "C999", "S001", 1
+        )
+    )
+
+    # OPERACION 12: Crear reserva con duracion invalida
+    ejecutar_operacion(
+        12,
+        "Crear reserva con duracion incorrecta",
+        lambda: sistema.crear_reserva(
+            "R003", "C002", "S002", -2
+        )
+    )
+
+    # OPERACION 13: Crear y cancelar otra reserva
+    ejecutar_operacion(
+        13,
+        "Crear reserva para cancelar",
+        lambda: sistema.crear_reserva(
+            "R004", "C002", "S003", 1
+        )
+    )
+
+    ejecutar_operacion(
+        14,
+        "Cancelar reserva R004",
+        lambda: sistema.reservas[-1].cancelar()
+    )
+
+    # ==========================================
+    # MOSTRAR RESULTADOS FINALES
+    # ==========================================
+
+    print("\n==========================================")
+    print("          RESUMEN DEL SISTEMA")
+    print("==========================================")
+
+    print("\nCLIENTES REGISTRADOS:")
+    for cliente in sistema.listar_clientes():
+        print(cliente)
+
+    print("\nSERVICIOS REGISTRADOS:")
+    for servicio in sistema.listar_servicios():
+        print(servicio)
+
+    print("\nRESERVAS REGISTRADAS:")
+    for reserva in sistema.listar_reservas():
+        print(reserva)
+        print("------------------------------------------")
+
+    logger.info("Ejecucion del sistema finalizada.")
+
+    print("\nSistema Software FJ finalizado.")
+    print("Los eventos y errores se registraron en el archivo de log.")
+
+
+# ==========================================
+# PUNTO DE ENTRADA DEL PROGRAMA
+# ==========================================
+
+if __name__ == "__main__":
+    iniciar_sistema()
