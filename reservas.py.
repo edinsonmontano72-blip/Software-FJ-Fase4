@@ -1,0 +1,137 @@
+
+# ==========================================
+# SOFTWARE FJ - GESTION DE RESERVAS
+# Curso: Programacion 213023 - UNAD
+# ==========================================
+
+from datetime import datetime
+from excepciones import (
+    DatosInvalidosError,
+    ReservaInvalidaError,
+    OperacionNoPermitidaError
+)
+
+
+class Reserva:
+    """
+    Representa una reserva realizada por un cliente
+    para utilizar uno de los servicios de Software FJ.
+    """
+
+    def __init__(self, identificador, cliente, servicio, duracion):
+        if not identificador:
+            raise ReservaInvalidaError(
+                "El identificador de la reserva es obligatorio."
+            )
+
+        if cliente is None:
+            raise ReservaInvalidaError(
+                "Debe seleccionar un cliente."
+            )
+
+        if servicio is None:
+            raise ReservaInvalidaError(
+                "Debe seleccionar un servicio."
+            )
+
+        if not isinstance(duracion, (int, float)) or isinstance(duracion, bool) or duracion <= 0:
+            raise DatosInvalidosError(
+                "La duracion debe ser un numero mayor que cero."
+            )
+
+        self.__identificador = str(identificador)
+        self.__cliente = cliente
+        self.__servicio = servicio
+        self.__duracion = duracion
+        self.__estado = "Pendiente"
+        self.__fecha = datetime.now()
+        self.__costo = 0.0
+
+    @property
+    def identificador(self):
+        return self.__identificador
+
+    @property
+    def cliente(self):
+        return self.__cliente
+
+    @property
+    def servicio(self):
+        return self.__servicio
+
+    @property
+    def duracion(self):
+        return self.__duracion
+
+    @property
+    def estado(self):
+        return self.__estado
+
+    @property
+    def costo(self):
+        return self.__costo
+
+    def confirmar(self):
+        """Confirma una reserva pendiente."""
+
+        if self.__estado != "Pendiente":
+            raise OperacionNoPermitidaError(
+                "Solo se pueden confirmar reservas pendientes."
+            )
+
+        self.__servicio.verificar_disponibilidad()
+        self.__estado = "Confirmada"
+
+        return "Reserva confirmada correctamente."
+
+    def cancelar(self):
+        """Cancela una reserva pendiente o confirmada."""
+
+        if self.__estado not in ("Pendiente", "Confirmada"):
+            raise OperacionNoPermitidaError(
+                "No se puede cancelar esta reserva."
+            )
+
+        self.__estado = "Cancelada"
+
+        return "Reserva cancelada correctamente."
+
+    def procesar(self, descuento=0, impuesto=0):
+        """
+        Calcula el costo y procesa la reserva.
+        Si ocurre un error, conserva la excepción original
+        como causa de la excepción personalizada.
+        """
+
+        if self.__estado != "Confirmada":
+            raise OperacionNoPermitidaError(
+                "La reserva debe estar confirmada para procesarse."
+            )
+
+        try:
+            self.__costo = self.__servicio.calcular_costo(
+                self.__duracion,
+                descuento,
+                impuesto
+            )
+
+            self.__estado = "Procesada"
+            return self.__costo
+
+        except Exception as error:
+            raise ReservaInvalidaError(
+                "No fue posible procesar la reserva."
+            ) from error
+
+    def obtener_resumen(self):
+        return (
+            f"Reserva: {self.__identificador}\n"
+            f"Cliente: {self.__cliente.nombre}\n"
+            f"Servicio: {self.__servicio.nombre}\n"
+            f"Duracion: {self.__duracion} horas\n"
+            f"Estado: {self.__estado}\n"
+            f"Costo: ${self.__costo:.2f}"
+        )
+
+    def __str__(self):
+        return self.obtener_resumen()
