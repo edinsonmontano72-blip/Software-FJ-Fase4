@@ -1,0 +1,154 @@
+
+# ==========================================
+# SOFTWARE FJ - GESTION DE SERVICIOS
+# Curso: Programacion 213023 - UNAD
+# ==========================================
+
+from abc import abstractmethod
+from entidades import Entidad
+from excepciones import (
+    DatosInvalidosError,
+    ServicioNoDisponibleError
+)
+
+
+class Servicio(Entidad):
+    """Clase abstracta para los servicios de Software FJ."""
+
+    def __init__(self, identificador, nombre, tarifa_base,
+                 disponible=True):
+        super().__init__(identificador)
+
+        if not isinstance(nombre, str) or not nombre.strip():
+            raise DatosInvalidosError("El nombre del servicio es obligatorio.")
+
+        if not isinstance(tarifa_base, (int, float)) or tarifa_base <= 0:
+            raise DatosInvalidosError("La tarifa debe ser mayor que cero.")
+
+        self._nombre = nombre.strip()
+        self._tarifa_base = float(tarifa_base)
+        self._disponible = disponible
+
+    @property
+    def nombre(self):
+        return self._nombre
+
+    @property
+    def tarifa_base(self):
+        return self._tarifa_base
+
+    @property
+    def disponible(self):
+        return self._disponible
+
+    def verificar_disponibilidad(self):
+        if not self._disponible:
+            raise ServicioNoDisponibleError(
+                f"El servicio {self._nombre} no esta disponible."
+            )
+
+    def calcular_costo(self, duracion, descuento=0, impuesto=0):
+        self.verificar_disponibilidad()
+        self.validar_parametros()
+
+        if not isinstance(duracion, (int, float)) or duracion <= 0:
+            raise DatosInvalidosError("La duracion debe ser mayor que cero.")
+
+        if not 0 <= descuento <= 100:
+            raise DatosInvalidosError("Descuento no valido.")
+
+        if not 0 <= impuesto <= 100:
+            raise DatosInvalidosError("Impuesto no valido.")
+
+        subtotal = self._tarifa_base * duracion
+        valor_descuento = subtotal * descuento / 100
+        total = subtotal - valor_descuento
+        total += total * impuesto / 100
+
+        return round(total, 2)
+
+    @abstractmethod
+    def validar_parametros(self):
+        pass
+
+    @abstractmethod
+    def describir_servicio(self):
+        pass
+
+    def obtener_resumen(self):
+        return self.describir_servicio()
+
+
+# ==========================================
+# SERVICIO 1: RESERVA DE SALAS
+# ==========================================
+
+class ReservaSala(Servicio):
+
+    def __init__(self, identificador, nombre, tarifa_base, capacidad):
+        self.capacidad = capacidad
+        super().__init__(identificador, nombre, tarifa_base)
+        self.validar_parametros()
+
+    def validar_parametros(self):
+        if not isinstance(self.capacidad, int) or self.capacidad <= 0:
+            raise DatosInvalidosError(
+                "La capacidad de la sala debe ser un entero positivo."
+            )
+
+    def describir_servicio(self):
+        return (
+            f"Sala: {self.nombre} | "
+            f"Capacidad: {self.capacidad} personas | "
+            f"Tarifa por hora: ${self.tarifa_base}"
+        )
+
+
+# ==========================================
+# SERVICIO 2: ALQUILER DE EQUIPOS
+# ==========================================
+
+class AlquilerEquipo(Servicio):
+
+    def __init__(self, identificador, nombre, tarifa_base, tipo_equipo):
+        self.tipo_equipo = tipo_equipo
+        super().__init__(identificador, nombre, tarifa_base)
+        self.validar_parametros()
+
+    def validar_parametros(self):
+        if not isinstance(self.tipo_equipo, str) or not self.tipo_equipo.strip():
+            raise DatosInvalidosError(
+                "Debe especificar el tipo de equipo."
+            )
+
+    def describir_servicio(self):
+        return (
+            f"Alquiler: {self.nombre} | "
+            f"Equipo: {self.tipo_equipo} | "
+            f"Tarifa por hora: ${self.tarifa_base}"
+        )
+
+
+# ==========================================
+# SERVICIO 3: ASESORIAS ESPECIALIZADAS
+# ==========================================
+
+class AsesoriaEspecializada(Servicio):
+
+    def __init__(self, identificador, nombre, tarifa_base, especialidad):
+        self.especialidad = especialidad
+        super().__init__(identificador, nombre, tarifa_base)
+        self.validar_parametros()
+
+    def validar_parametros(self):
+        if not isinstance(self.especialidad, str) or not self.especialidad.strip():
+            raise DatosInvalidosError(
+                "Debe especificar la especialidad de la asesoria."
+            )
+
+    def describir_servicio(self):
+        return (
+            f"Asesoria: {self.nombre} | "
+            f"Especialidad: {self.especialidad} | "
+            f"Tarifa por hora: ${self.tarifa_base}"
+        )
