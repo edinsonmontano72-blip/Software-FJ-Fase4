@@ -1,0 +1,274 @@
+
+# ==========================================
+# SOFTWARE FJ
+# Archivo: sistema.py
+# Administrador general del sistema
+# ==========================================
+
+import logging
+
+from clientes import Cliente
+from servicios import Servicio
+from reservas import Reserva
+
+from excepciones import (
+    DatosInvalidosError,
+    ReservaError,
+    ClienteNoEncontradoError
+)
+
+
+class SistemaGestion:
+
+    def __init__(self):
+
+        # Listas internas del sistema
+        self.clientes = []
+        self.servicios = []
+        self.reservas = []
+
+        logging.info("Sistema Software FJ iniciado.")
+
+    # ======================================
+    # REGISTRAR CLIENTES
+    # ======================================
+
+    def registrar_cliente(self, cliente):
+
+        try:
+
+            if not isinstance(cliente, Cliente):
+                raise DatosInvalidosError(
+                    "El objeto no corresponde a un cliente."
+                )
+
+            for existente in self.clientes:
+
+                if existente.identificacion == cliente.identificacion:
+                    raise DatosInvalidosError(
+                        "El cliente ya se encuentra registrado."
+                    )
+
+            self.clientes.append(cliente)
+
+            logging.info(
+                f"Cliente {cliente.nombre} registrado."
+            )
+
+            return "Cliente registrado correctamente."
+
+        except Exception as error:
+
+            logging.exception("Error al registrar cliente.")
+
+            raise
+
+    # ======================================
+    # REGISTRAR SERVICIOS
+    # ======================================
+
+    def registrar_servicio(self, servicio):
+
+        try:
+
+            if not isinstance(servicio, Servicio):
+                raise DatosInvalidosError(
+                    "El objeto no corresponde a un servicio."
+                )
+
+            for existente in self.servicios:
+
+                if existente.identificacion == servicio.identificacion:
+                    raise DatosInvalidosError(
+                        "El servicio ya se encuentra registrado."
+                    )
+
+            self.servicios.append(servicio)
+
+            logging.info(
+                f"Servicio {servicio.nombre} registrado."
+            )
+
+            return "Servicio registrado correctamente."
+
+        except Exception as error:
+
+            logging.exception("Error al registrar servicio.")
+
+            raise
+
+    # ======================================
+    # BUSCAR CLIENTE
+    # ======================================
+
+    def buscar_cliente(self, identificacion):
+
+        for cliente in self.clientes:
+
+            if cliente.identificacion == identificacion:
+                return cliente
+
+        raise ClienteNoEncontradoError(
+            "No se encontro el cliente solicitado."
+        )
+
+    # ======================================
+    # BUSCAR SERVICIO
+    # ======================================
+
+    def buscar_servicio(self, identificacion):
+
+        for servicio in self.servicios:
+
+            if servicio.identificacion == identificacion:
+                return servicio
+
+        raise DatosInvalidosError(
+            "No se encontro el servicio solicitado."
+        )
+
+    # ======================================
+    # CREAR RESERVAS
+    # ======================================
+
+    def crear_reserva(
+        self, identificacion_reserva,
+        identificacion_cliente,
+        identificacion_servicio,
+        duracion
+    ):
+
+        try:
+
+            for existente in self.reservas:
+
+                if existente.identificacion == identificacion_reserva:
+                    raise ReservaError(
+                        "La reserva ya existe."
+                    )
+
+            cliente = self.buscar_cliente(
+                identificacion_cliente
+            )
+
+            servicio = self.buscar_servicio(
+                identificacion_servicio
+            )
+
+            reserva = Reserva(
+                identificacion_reserva,
+                cliente,
+                servicio,
+                duracion
+            )
+
+            self.reservas.append(reserva)
+
+            logging.info(
+                f"Reserva {identificacion_reserva} creada."
+            )
+
+            return reserva
+
+        except Exception as error:
+
+            logging.exception("Error al crear reserva.")
+
+            raise
+
+        finally:
+
+            logging.info(
+                "Finalizo el intento de creacion de reserva."
+            )
+
+    # ======================================
+    # LISTAR CLIENTES
+    # ======================================
+
+    def listar_clientes(self):
+
+        if not self.clientes:
+            return "No hay clientes registrados."
+
+        return [
+            cliente.describir()
+            for cliente in self.clientes
+        ]
+
+    # ======================================
+    # LISTAR SERVICIOS
+    # ======================================
+
+    def listar_servicios(self):
+
+        if not self.servicios:
+            return "No hay servicios registrados."
+
+        return [
+            servicio.describir()
+            for servicio in self.servicios
+        ]
+
+    # ======================================
+    # LISTAR RESERVAS
+    # ======================================
+
+    def listar_reservas(self):
+
+        if not self.reservas:
+            return "No hay reservas registradas."
+
+        return [
+            reserva.mostrar_informacion()
+            for reserva in self.reservas
+        ]
+
+    # ======================================
+    # CONFIRMAR RESERVA
+    # ======================================
+
+    def confirmar_reserva(self, identificacion):
+
+        reserva = self.buscar_reserva(identificacion)
+
+        return reserva.confirmar()
+
+    # ======================================
+    # CANCELAR RESERVA
+    # ======================================
+
+    def cancelar_reserva(self, identificacion):
+
+        reserva = self.buscar_reserva(identificacion)
+
+        return reserva.cancelar()
+
+    # ======================================
+    # BUSCAR RESERVA
+    # ======================================
+
+    def buscar_reserva(self, identificacion):
+
+        for reserva in self.reservas:
+
+            if reserva.identificacion == identificacion:
+                return reserva
+
+        raise ReservaError(
+            "No se encontro la reserva solicitada."
+        )
+
+    # ======================================
+    # PROCESAR RESERVA
+    # ======================================
+
+    def procesar_reserva(
+        self, identificacion,
+        impuesto=0,
+        descuento=0
+    ):
+
+        reserva = self.buscar_reserva(identificacion)
+
+        return reserva.procesar(impuesto, descuento)
