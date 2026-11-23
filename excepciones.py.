@@ -1,0 +1,34 @@
+
+# ==========================================
+# SOFTWARE FJ - EXCEPCIONES PERSONALIZADAS
+# Curso: Programación 213023 - UNAD
+# ==========================================
+
+class ErrorSistema(Exception):
+    """Excepción general del sistema."""
+    pass
+
+
+class DatosInvalidosError(ErrorSistema):
+    """Se produce cuando los datos ingresados son inválidos."""
+    pass
+
+
+class ClienteNoEncontradoError(ErrorSistema):
+    """Se produce cuando un cliente no existe."""
+    pass
+
+
+class ServicioNoDisponibleError(ErrorSistema):
+    """Se produce cuando un servicio no está disponible."""
+    pass
+
+
+class ReservaInvalidaError(ErrorSistema):
+    """Se produce cuando una reserva tiene datos incorrectos."""
+    pass
+
+
+class OperacionNoPermitidaError(ErrorSistema):
+    """Se produce cuando una operación no está permitida."""
+    pass
